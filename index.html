@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
@@ -9,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/index.css">
     <style>
       body {
         font-family: 'Cairo', sans-serif;
@@ -17,11 +17,11 @@
         -moz-osx-font-smoothing: grayscale;
       }
       .font-sans { font-family: 'Cairo', sans-serif; }
-      
+
       /* Scrollbar */
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      
+
       /* Markdown Styles */
       .markdown-body ul { list-style-type: disc; padding-right: 1.5rem; margin-bottom: 1.25rem; }
       .markdown-body ol { list-style-type: decimal; padding-right: 1.5rem; margin-bottom: 1.25rem; }
@@ -29,13 +29,13 @@
       .markdown-body p { margin-bottom: 1rem; line-height: 2.2; font-size: 1.05em; }
       .markdown-body li { margin-bottom: 0.5rem; line-height: 2; font-size: 1.05em; }
       .markdown-body strong { color: #4338ca; font-weight: 800; }
-      
+
       /* Animations */
       .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
       .typing-dot:nth-child(1) { animation-delay: -0.32s; }
       .typing-dot:nth-child(2) { animation-delay: -0.16s; }
       @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-      
+
       @keyframes popIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
       .pop-in { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
@@ -50,32 +50,17 @@
         code { border: 1px solid #333 !important; color: black !important; background: white !important; }
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+  </head>
   <body>
     <div id="root">
-        <div style="height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #f8fafc; font-family: 'Cairo', sans-serif;">
-            <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <h2 style="margin-top: 20px; color: #475569; font-weight: bold;">جاري تحميل المعلم الذكي...</h2>
-            <style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
-        </div>
+      <div style="height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #f8fafc; font-family: 'Cairo', sans-serif;">
+        <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <h2 style="margin-top: 20px; color: #475569; font-weight: bold;">جاري تحميل المعلم الذكي...</h2>
+        <style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
+      </div>
     </div>
-    <!-- FIXED: Point to local file absolutely. No importmaps. -->
-    <script type="module" src="/index.tsx"></script>
+    <!-- Point to local file absolutely -->
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
+
