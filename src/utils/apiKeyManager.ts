@@ -1,42 +1,27 @@
+// Manages multiple Gemini API keys with rotation (Vite-compatible)
 
-// This utility manages multiple API keys for failover/rotation.
-// It reads from process.env (polyfilled by Vite)
+const keys = [
+  import.meta.env.VITE_API_KEY,
+  import.meta.env.VITE_API_KEY_2,
+  import.meta.env.VITE_API_KEY_3,
+  import.meta.env.VITE_API_KEY_4,
+  import.meta.env.VITE_API_KEY_5,
+].filter((key): key is string => Boolean(key && key.trim()));
 
-const getAvailableKeys = () => {
-  const keys = [
-    process.env.API_KEY,
-    process.env.API_KEY_2,
-    process.env.API_KEY_3,
-    process.env.API_KEY_4,
-    process.env.API_KEY_5
-  ];
-  // Filter out undefined or empty keys
-  return keys.filter(key => key && key.trim().length > 0) as string[];
-};
-
-// Global state for the current key index
 let currentKeyIndex = 0;
 
-export const getApiKey = (): string => {
-  const keys = getAvailableKeys();
+export function getApiKey(): string {
   if (keys.length === 0) {
-    console.error("No API Keys found in environment variables.");
-    return '';
-  }
-  // Safety check to ensure index is within bounds
-  if (currentKeyIndex >= keys.length) {
-    currentKeyIndex = 0;
+    throw new Error("❌ No VITE_API_KEY found. Check Vercel env vars.");
   }
   return keys[currentKeyIndex];
-};
+}
 
-export const rotateApiKey = (): boolean => {
-  const keys = getAvailableKeys();
-  if (keys.length <= 1) return false; // Can't rotate if only 1 or 0 keys
+export function rotateApiKey(): boolean {
+  if (keys.length <= 1) return false;
 
-  const previousIndex = currentKeyIndex;
   currentKeyIndex = (currentKeyIndex + 1) % keys.length;
-  
-  console.log(`API Key rotated from index ${previousIndex} to ${currentKeyIndex}`);
+  console.warn("🔁 Gemini API key rotated");
   return true;
-};
+}
+
