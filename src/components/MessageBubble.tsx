@@ -82,13 +82,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
     isSpeakingRef.current = true; // Start the flag
 
     try {
-        // Clean text: Remove markdown, URLs, etc.
+        // Clean text
         const cleanText = message.text
             .replace(/```[\s\S]*?```/g, '') // Remove code blocks
             .replace(/[*#`_\-]/g, ' ')
             .replace(/https?:\/\/\S+/g, 'رابط')
             .trim()
-            .substring(0, 2000); // Slightly increased limit as we chunk now
+            .substring(0, 3000); 
 
         if (!cleanText) {
              setIsLoadingAudio(false);
@@ -105,20 +105,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
              await audioContextRef.current.resume();
         }
         
-        // Reset timing
+        // Reset timing to current
         nextStartTimeRef.current = audioContextRef.current.currentTime;
 
-        // --- SMART CHUNKING LOGIC (The Fix) ---
-        // Split text into sentences/phrases to reduce initial latency
-        // Regex splits by . ? ! or newlines, keeping the delimiter
+        // --- FIXED CHUNKING & LOGIC ---
+        // Split by sentence but keep chunks small (150 chars) for faster first byte
         const sentences = cleanText.match(/[^.!?؟:\n]+[.!?؟:\n]+|[^.!?؟:\n]+$/g) || [cleanText];
         
-        // Group short sentences into chunks of ~200 characters to optimize network calls
         const chunks: string[] = [];
         let tempChunk = "";
         
         for (const sentence of sentences) {
-            if (tempChunk.length + sentence.length > 200) {
+            if (tempChunk.length + sentence.length > 150) {
                 chunks.push(tempChunk);
                 tempChunk = sentence;
             } else {
@@ -135,20 +133,37 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
             await streamSpeech(chunk, (base64) => {
                 if (!isSpeakingRef.current) return;
                 
-                // As soon as the first byte of the first chunk arrives, stop loading spinner
+                // As soon as data arrives, stop loader
                 setIsLoadingAudio(false);
-                
                 scheduleChunk(base64);
             });
         }
 
-        // When all chunks are processed
+        // --- CRITICAL FIX: WAIT FOR AUDIO TO FINISH ---
+        // We only turn off the button when the playback duration has passed
         if (isSpeakingRef.current) {
-            // We don't auto-stop immediately because audio might still be playing from buffer
-            // The sources onended handlers will clean up, but we can reset the speaking state
-            // when the last source finishes.
-            // For simplicity in this implementation, we leave the "Stop" button active
-            // or we could use a timer. Here we keep it simple.
+            const ctx = audioContextRef.current;
+            if (ctx) {
+                // Calculate time remaining in the buffer
+                // nextStartTimeRef.current holds the exact time when audio WILL finish
+                const remainingDuration = nextStartTimeRef.current - ctx.currentTime;
+                
+                if (remainingDuration > 0) {
+                    setTimeout(() => {
+                        // Check again if user hasn't stopped it manually
+                        if (isSpeakingRef.current) {
+                            setIsSpeaking(false);
+                            isSpeakingRef.current = false;
+                        }
+                    }, remainingDuration * 1000);
+                } else {
+                    setIsSpeaking(false);
+                    isSpeakingRef.current = false;
+                }
+            } else {
+                setIsSpeaking(false);
+                isSpeakingRef.current = false;
+            }
         }
 
     } catch (e) {
@@ -183,25 +198,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
           source.buffer = buffer;
           source.connect(ctx.destination);
           
-          // Gapless Scheduling: Ensure next chunk plays right after previous one
+          // Gapless Scheduling
           const startTime = Math.max(ctx.currentTime, nextStartTimeRef.current);
           source.start(startTime);
           nextStartTimeRef.current = startTime + buffer.duration;
           
           sourcesRef.current.push(source);
           
-          // Cleanup source from list when done
           source.onended = () => {
               const index = sourcesRef.current.indexOf(source);
               if (index > -1) {
                   sourcesRef.current.splice(index, 1);
               }
-              // Auto-stop UI if all sources are done and we are not expecting more chunks
-              // (Simplification: If buffer is empty and time passed)
-              if (sourcesRef.current.length === 0 && ctx.currentTime >= nextStartTimeRef.current) {
-                  setIsSpeaking(false);
-                  isSpeakingRef.current = false;
-              }
+              // REMOVED: The premature logic that was stopping audio here
           };
 
           return source;
@@ -212,7 +221,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
   };
 
   return (
-    // UPDATED LAYOUT FOR ARABIC (RTL):
     <div className={`flex w-full mb-3 md:mb-5 pop-in ${isUser ? 'justify-end' : 'justify-start'} print:block print:mb-4 print:w-full`}>
       <div className={`flex w-full ${isUser ? 'flex-row-reverse' : 'flex-row'} gap-2.5 print:max-w-full print:flex-row print:w-full`}>
         
@@ -282,7 +290,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
                   td: ({node, ...props}) => <td className="px-3 py-3 text-slate-800 border print:border-black min-w-[120px]" {...props} />,
                   a: ({node, ...props}) => <a className="text-blue-600 underline hover:text-blue-800 font-semibold print:text-black print:no-underline break-all" {...props} />,
                   
-                  // --- INTERACTIVE PARAGRAPHS (Text Select Only) ---
                   p: ({node, children, ...props}) => {
                     const text = extractText(children);
 
@@ -298,7 +305,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
                                 <p className="inline leading-loose" {...props}>{children}</p>
                             </div>
                             
-                            {/* Controls Overlay (Ask Hint Only) */}
                             <div className="inline-flex items-center gap-1 absolute left-2 top-0 transform -translate-y-1/2 bg-white shadow-sm border border-slate-200 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-all z-10 scale-90 hover:scale-100 pointer-events-none">
                                 <span className="text-[10px] text-slate-400 font-bold">
                                     <HelpCircle size={12} className="inline mr-1" />
@@ -327,7 +333,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
 
                   blockquote: ({node, ...props}) => <blockquote className="border-r-4 border-indigo-300 pr-4 italic text-slate-700 bg-indigo-50/50 p-3 rounded-lg my-3 text-base md:text-xl print:bg-white print:text-black print:border-black print:pl-0" {...props} />,
                   
-                  // --- CODE RENDERING (Reverted to standard style) ---
                   code: ({node, inline, className, children, ...props}: any) => {
                      if (inline) {
                        return (
@@ -344,7 +349,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
                        );
                      }
                      
-                     // Block code (generic)
                      return (
                         <div className="my-5 w-full direction-ltr pop-in" dir="ltr">
                            <div className="flex justify-end mb-0 no-print">
@@ -374,3 +378,4 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, subject, 
     </div>
   );
 };
+
