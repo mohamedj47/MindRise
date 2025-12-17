@@ -1,4 +1,4 @@
-import { Message, Sender, GradeLevel, Subject, Attachment } from "../types";
+import { Message, Sender, GradeLevel, Subject, Attachment } from "../types"; 
 import { getCurriculumStringForAI } from "../data/curriculum";
 
 const SYSTEM_INSTRUCTION = `
