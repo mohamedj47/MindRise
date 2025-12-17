@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, Youtube, Mic, Camera, List, Sparkles } from 'lucide-react';
 
 interface TutorialModalProps {
@@ -7,14 +7,51 @@ interface TutorialModalProps {
   onClose: () => void;
 }
 
-// ------------------------------------------------------------------
-// هام جداً: ضع كود فيديو اليوتيوب هنا بدلاً من علامات التنصيص الفارغة
-// مثال: إذا كان الرابط https://www.youtube.com/watch?v=dQw4w9WgXcQ
-// ضع فقط الجزء الأخير: "dQw4w9WgXcQ"
-// ------------------------------------------------------------------
-const VIDEO_ID = "fqWGC1n9pBs"; // <--- تم إضافة كود الفيديو الخاص بك
+// كود الفيديو
+const VIDEO_ID = "fqWGC1n9pBs";
+
+// رابط موسيقى جديد ومباشر (Sad Piano) - رابط أكثر استقراراً
+const BG_MUSIC_URL = "https://cdn.pixabay.com/audio/2021/11/25/audio_91572d4221.mp3";
 
 export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // تشغيل الموسيقى عند فتح النافذة
+  useEffect(() => {
+    if (isOpen) {
+        // إنشاء عنصر الصوت
+        const audio = new Audio(BG_MUSIC_URL);
+        audio.volume = 0.2; // رفع الصوت قليلاً ليكون مسموعاً
+        audio.loop = true;
+        audio.preload = 'auto';
+        audioRef.current = audio;
+
+        // محاولة التشغيل
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Audio autoplay prevented:", error);
+                // محاولة أخرى عند تفاعل المستخدم مع الصفحة
+                const handleUserInteraction = () => {
+                    audio.play();
+                    document.removeEventListener('click', handleUserInteraction);
+                };
+                document.addEventListener('click', handleUserInteraction);
+            });
+        }
+    }
+
+    return () => {
+        // تنظيف وإيقاف الصوت عند الإغلاق
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -40,14 +77,13 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
                     allowFullScreen
                 ></iframe>
             ) : (
-                /* Placeholder until video is added */
                 <div className="p-6 flex flex-col items-center">
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-red-600 rounded-full flex items-center justify-center text-white mb-4 shadow-lg shadow-red-900/50 animate-pulse group-hover:scale-110 transition-transform cursor-pointer">
                         <Youtube size={32} className="fill-current md:w-10 md:h-10" />
                     </div>
                     <h3 className="text-white text-lg md:text-xl font-bold mb-2">فيديو شرح التطبيق</h3>
                     <p className="text-slate-300 text-xs md:text-sm max-w-md">
-                        سيتم إضافة فيديو قريباً لشرح كيفية استخدام المميزات (الصوت، الكاميرا، والدردشة) لتحقيق أقصى استفادة.
+                        سيتم إضافة فيديو قريباً لشرح كيفية استخدام المميزات.
                     </p>
                 </div>
             )}
@@ -110,3 +146,4 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose })
     </div>
   );
 };
+
