@@ -1,52 +1,30 @@
-export default async function handler(req: Request): Promise<Response> {
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405 }
-    );
-  }
-
-  const body = await req.json();
-  const prompt = body?.prompt;
-
-  if (!prompt) {
-    return new Response(
-      JSON.stringify({ error: 'Prompt is required' }),
-      { status: 400 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.GEMINI_API_KEY}`,
         },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
+        body: JSON.stringify(req.body),
       }
     );
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return new Response(JSON.stringify(data), {
-        status: response.status,
-      });
-    }
-
-    const text =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    return new Response(JSON.stringify({ text }), { status: 200 });
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: 'Gemini request failed' }),
-      { status: 500 }
-    );
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error('Gemini Proxy Error:', error);
+    return res.status(500).json({ error: 'Gemini backend error' });
   }
 }
