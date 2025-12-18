@@ -1,51 +1,31 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import axios from 'axios';
 
-function App() {
-  const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
+export default function App() {
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
 
-  const sendPrompt = async () => {
-    if (!prompt) {
-      alert('من فضلك اكتب نصًا أولاً');
-      return;
-    }
-
+  const handleSend = async () => {
     try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-
-      const data = await res.json();
-
-      if (res.ok) setResponse(data.response || JSON.stringify(data));
-      else alert('Error: ' + data.error);
-
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء الاتصال بالـ API');
+      const res = await axios.post('/api/gemini', { prompt: input });
+      setOutput(JSON.stringify(res.data, null, 2));
+    } catch (err: any) {
+      setOutput(err.message);
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Gemini API Test</h1>
-      <input
-        type="text"
-        value={prompt}
-        onChange={e => setPrompt(e.target.value)}
-        placeholder="اكتب النص هنا"
-        style={{ width: '300px', marginRight: '10px' }}
+    <div style={{ padding: 20 }}>
+      <h1>Gemini AI Demo</h1>
+      <textarea
+        rows={5}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="اكتب هنا..."
+        style={{ width: '100%' }}
       />
-      <button onClick={sendPrompt}>Send</button>
-      {response && (
-        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
-          Response: {response}
-        </div>
-      )}
+      <button onClick={handleSend}>Send</button>
+      <pre>{output}</pre>
     </div>
   );
 }
-
-export default App;
