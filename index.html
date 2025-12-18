@@ -1,47 +1,12 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gemini Test</title>
-</head>
-<body>
-  <h1>اختبار Gemini API</h1>
-  <input type="text" id="promptInput" placeholder="اكتب النص هنا" />
-  <button id="sendBtn">Send</button>
-
-  <script>
-    async function sendPrompt() {
-      const prompt = document.getElementById('promptInput').value;
-
-      if (!prompt) {
-        alert('من فضلك اكتب نصًا أولاً');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          console.log('Gemini response:', data);
-          alert('Response: ' + data.response);
-        } else {
-          console.error('Error:', data.error);
-          alert('Error: ' + data.error);
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        alert('حدث خطأ أثناء الاتصال بالـ API');
-      }
-    }
-
-    document.getElementById('sendBtn').addEventListener('click', sendPrompt);
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React Gemini</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
