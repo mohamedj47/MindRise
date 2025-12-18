@@ -9,26 +9,32 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
   }
 
   try {
-    // قراءة البيانات من body
+    // قراءة body
     let body = '';
-    req.on('data', chunk => {
-      body += chunk;
-    });
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      let data;
+      try {
+        data = JSON.parse(body);
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON' }));
+        return;
+      }
 
-    req.on('end', () => {
-      const data = body ? JSON.parse(body) : {};
-      const prompt = data.prompt;
-
+      const { prompt } = data;
       if (!prompt) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Prompt is required' }));
         return;
       }
 
-      // منطق الـ API هنا
+      // هنا تحط منطق Gemini أو OpenAI API
+      // مثال dummy response:
       const result = {
-        message: `Received prompt: ${prompt}`,
-        timestamp: new Date().toISOString(),
+        prompt,
+        response: `Gemini simulated response for: "${prompt}"`,
+        timestamp: new Date().toISOString()
       };
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
