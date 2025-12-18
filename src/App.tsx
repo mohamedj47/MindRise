@@ -18,11 +18,10 @@ function App() {
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setResponse(data.response);
-      } else {
-        alert('Error: ' + data.error);
-      }
+
+      if (res.ok) setResponse(data.response || JSON.stringify(data));
+      else alert('Error: ' + data.error);
+
     } catch (err) {
       console.error(err);
       alert('حدث خطأ أثناء الاتصال بالـ API');
@@ -31,7 +30,7 @@ function App() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>اختبار Gemini API</h1>
+      <h1>Gemini API Test</h1>
       <input
         type="text"
         value={prompt}
@@ -50,4 +49,3 @@ function App() {
 }
 
 export default App;
-
