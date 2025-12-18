@@ -1,5 +1,8 @@
-// api/gemini.ts
 import { IncomingMessage, ServerResponse } from 'http';
+import fetch from 'node-fetch'; // لتعمل fetch على Node.js، Vercel يدعمها الآن
+
+// لاحظ: ضع مفتاحك في Environment Variables على Vercel باسم GEMINI_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
   if (req.method !== 'POST') {
@@ -11,7 +14,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
   try {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    req.on('end', async () => {
       let data;
       try {
         data = JSON.parse(body);
@@ -28,15 +31,32 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
         return;
       }
 
-      // منطق Gemini API الحقيقي
-      const result = {
-        prompt,
-        response: `Gemini simulated response for: "${prompt}"`,
-        timestamp: new Date().toISOString()
-      };
+      if (!GEMINI_API_KEY) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Gemini API key not set' }));
+        return;
+      }
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
+      try {
+        // 👇 استدعاء Gemini API
+        const apiRes = await fetch('https://api.gemini.example.com/v1/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GEMINI_API_KEY}`
+          },
+          body: JSON.stringify({ prompt })
+        });
+
+        const result = await apiRes.json();
+
+        res.writeHead(apiRes.status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        console.error('Gemini API error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Gemini backend error' }));
+      }
     });
   } catch (error) {
     console.error(error);
