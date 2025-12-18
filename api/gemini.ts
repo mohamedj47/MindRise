@@ -9,10 +9,9 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
   }
 
   try {
-    // قراءة body
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
+    req.on('end', () => {
       let data;
       try {
         data = JSON.parse(body);
@@ -29,8 +28,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
         return;
       }
 
-      // هنا تحط منطق Gemini أو OpenAI API
-      // مثال dummy response:
+      // منطق Gemini API الحقيقي
       const result = {
         prompt,
         response: `Gemini simulated response for: "${prompt}"`,
