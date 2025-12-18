@@ -20,7 +20,7 @@ export default async function handler(
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -36,10 +36,10 @@ export default async function handler(
       }
     );
 
-    const text = await response.text(); // 👈 مهم
+    const text = await response.text();
 
     if (!response.ok) {
-      console.error('Gemini error:', text);
+      console.error('Gemini API error:', text);
       return res.status(500).json({
         error: 'Gemini API error',
         details: text,
@@ -47,8 +47,8 @@ export default async function handler(
     }
 
     return res.status(200).json(JSON.parse(text));
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: 'Gemini backend error' });
   }
 }
