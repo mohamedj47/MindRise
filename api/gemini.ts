@@ -1,27 +1,42 @@
 // api/gemini.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { IncomingMessage, ServerResponse } from 'http';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
   }
 
   try {
-    const { prompt } = req.body;
+    // قراءة البيانات من body
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+    });
 
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
-    }
+    req.on('end', () => {
+      const data = body ? JSON.parse(body) : {};
+      const prompt = data.prompt;
 
-    // هنا تحط الكود الخاص بالـ API اللي عايز تتعامل معاه
-    const result = {
-      message: `Received prompt: ${prompt}`,
-      timestamp: new Date().toISOString(),
-    };
+      if (!prompt) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Prompt is required' }));
+        return;
+      }
 
-    return res.status(200).json(result);
+      // منطق الـ API هنا
+      const result = {
+        message: `Received prompt: ${prompt}`,
+        timestamp: new Date().toISOString(),
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Internal Server Error' }));
   }
 }
